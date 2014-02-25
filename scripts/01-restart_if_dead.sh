@@ -2,6 +2,8 @@
 
 # Note: All API calls will trigger a system reboot if they suffer an exception
 
+BASH=$(which bash)
+
 LOGFILE=/opt/mining/var/log/cgminer-monitor.log
 
 DIR=$(dirname $(readlink -f $0))
@@ -31,7 +33,7 @@ function miner_kill()
 # Make a call to the API
 function call_api()
 {
-	$CALLDIR/call.sh $1
+	$BASH $CALLDIR/call.sh $1
 }
 
 # Return the number of seconds since the last share
