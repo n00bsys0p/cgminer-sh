@@ -24,22 +24,19 @@ function sys_reboot()
 }
 
 # Kill the miner with great vengeance and furious anger
-function miner_kill()
+function kill_miner()
 {
 	killall -9 $MINER_BIN
 	sleep 5
-}
 
-# Make a call to the API
-function call_api()
-{
-	$BASH $CALLDIR/call.sh $1
+    # See if killing it worked, or turned it into a zombie
+    return [ -z "$(ps aux | grep [v]ertminer | grep defunct)" ]
 }
 
 # Return the number of seconds since the last share
 function time_since_last_share()
 {
-    echo "$(date +%s)-$(call_api pools | grep 'Last Share Time' | awk '{print $NF}' | tr -d ',')" | bc
+    echo "$(date +%s)-$(call pools | grep 'Last Share Time' | awk '{print $NF}' | tr -d ',')" | bc
 }
 
 # Boolean whether we've made a share in the last $SECONDS
@@ -53,21 +50,18 @@ echo "Starting check at $(date)" | tee -a $LOGFILE
 
 # If we've gone longer than $SECONDS seconds since the
 # last share
-if [ ! sharing ]; then
+if ! sharing; then
 	# Try restarting via an API call
-	call_api restart
+	call restart
 
 	# First give the soft-restart some time to take effect
 	sleep 60
 
 	# If still over 60 seconds since the last share
-	if [ ! sharing ]; then
+	if ! sharing; then
 		# Try to kill the miner
-		miner_kill
-
-		# If we've had to kill it, check it's not defunct
-		if [ ! -z "$(ps aux | grep [v]ertminer | grep defunct)" ]; then
-			echo "Rebooting system due to defunct miner at $(date)" >&2 | tee -a $LOGFILE
+		if ! kill_miner; then
+			echo "Rebooting system due to defunct miner at $(date)" | tee -a $LOGFILE
 			sys_reboot
 		else
 			echo "All OK after miner killed." | tee -a $LOGFILE
@@ -78,7 +72,7 @@ if [ ! sharing ]; then
 
 	# If it's still more than 60 seconds since the last share time
 	# for a full system reboot
-	if [ ! sharing ]; then
+	if ! sharing; then
 		echo "Rebooting system due to miner still not working after API restart and proc kill at $(date)." | tee -a $LOGFILE
 		sys_reboot
 	else
