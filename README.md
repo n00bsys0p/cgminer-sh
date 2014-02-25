@@ -16,8 +16,22 @@ call.sh summary
 
 This would call "summary" on the API, giving some basic statistics.
 
+## Installation
+The user the miner runs as needs sudo permissions for /sbin/shutdown, so the script can reboot the machine if things have gone really wrong. To do this, add the following lines using visudo on the machine:
+```
+username ALL=/sbin/shutdown
+username ALL=NOPASSWD: /sbin/shutdown
+```
+Just replace username with the user that's running the miner application.
+
+To set this up as a cron job every 10 minutes, enter the following into /etc/cron.d/cgminer-monitor:
+```
+*/10 * * * username /bin/bash /path/to/cgminer-sh/scripts/01-restart_if_dead.sh
+```
+As before, replace username with the name of the user the miner runs as.
+
 ## Example Usage
-There is an example script in the scripts folder which checks that CGMiner is still running correctly. I run this as a cron job every 10 minutes.
+There is an example script in the scripts folder which checks that CGMiner is still running correctly. I run this in a cron job to automate.
 
 ## License
 Released under the MIT license as follows:
